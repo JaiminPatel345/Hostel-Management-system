@@ -94,7 +94,7 @@
 											</div>
 
 											<div class="form-group">
-												<label class="col-sm-2 control-label" for="hobbies" for="bday">Extra skill other than school/college learning</label>
+												<label class="col-sm-2 control-label" for="skills" for="bday">Extra skill other than school/college learning</label>
 												<div class="col-sm-8">
 													<textarea name="skills" class="form-control" required="required" id="skills" placeholder=" Musical instrument, Cooking, Software, GK, English, Acting, experience of professional work for any type of work" rows="5"></textarea>
 
@@ -179,9 +179,41 @@
 											</div>
 
 
+											<div class="form-group">
+												<label class="col-sm-2 control-label" for="Dsem"> How Many semesters of Diploma do you complete ? </label>
+												<div class="col-sm-8">
+													<input type="number" name="Dsem" id="Dsem" placeholder="leave blank if Not applicable">
+												</div>
+											</div>
+
+											<div id="diploma-container" class="form-group"></div>
+
+
 
 											<div class="form-group">
-												<label class="col-sm-2 control-label" for="hobbies" for="bachelor-spi">SPI of Bachelor in all semester </label>
+												<label class="col-sm-2 control-label" for="Bsem"> How Many semesters of Bachelor's do you complete ? </label>
+												<div class="col-sm-8">
+													<input type="number" name="Bsem" id="Bsem" placeholder="leave blank if Not applicable">
+												</div>
+											</div>
+
+											<div id="bachelor-container" class="form-group"></div>
+
+
+
+											<div class="form-group">
+												<label class="col-sm-2 control-label" for="Msem"> How Many semesters of Master's do you complete ? </label>
+												<div class="col-sm-8">
+													<input type="number" name="Msem" id="Msem" placeholder="leave blank if Not applicable">
+												</div>
+											</div>
+
+											<div id="master-container" class="form-group"></div>
+
+
+
+											<!-- <div class="form-group">
+												<label class="col-sm-2 control-label" for="bachelor-spi" for="bachelor-spi">SPI of Bachelor/Diploma in all semester </label>
 												<div class="col-sm-8">
 													<textarea name="bachelor-spi" class="form-control" required="required" id="bachelor-spi" placeholder="sem 1 : 9.00
 sem 2 : 9.20
@@ -192,14 +224,14 @@ sem 3 : 9.99" rows="7"></textarea>
 
 
 											<div class="form-group">
-												<label class="col-sm-2 control-label" for="hobbies" for="master-spi">SPI of Master in all semester (If applicable) </label>
+												<label class="col-sm-2 control-label" for="master-spi" for="master-spi">SPI of Master in all semester (If applicable) </label>
 												<div class="col-sm-8">
 													<textarea name="master-spi" class="form-control" required="required" id="master-spi" placeholder="sem 1 : 9.00
 sem 2 : 9.20
 sem 3 : 9.99" rows="7"></textarea>
 
 												</div>
-											</div>
+											</div> -->
 
 
 											<div class="form-group">
@@ -239,5 +271,60 @@ sem 3 : 9.99" rows="7"></textarea>
 	</div>
 	</div>
 	</div>
+
+	<script>
+		//Diploma
+		const Dsem = document.getElementById("Dsem");
+		const Dcontainer = document.getElementById("diploma-container");
+		Dsem.addEventListener("input", () => {
+			const n = parseInt(Dsem.value);
+			makeTextFides(n, "diploma-sem-", Dcontainer, "Diploma");
+		})
+
+		//Bachelor
+		const Bsem = document.getElementById("Bsem");
+		const Bcontainer = document.getElementById("bachelor-container");
+		Bsem.addEventListener("input", () => {
+			const n = parseInt(Bsem.value);
+			makeTextFides(n, "diploma-sem-", Bcontainer, "Bachelor");
+		})
+
+		//Master
+		const Msem = document.getElementById("Msem");
+		const Mcontainer = document.getElementById("master-container");
+		Msem.addEventListener("input", () => {
+			const n = parseInt(Msem.value);
+			makeTextFides(n, "diploma-sem-", Mcontainer, "Master");
+		})
+
+		function makeTextFides(n, name, container, print) {
+			container.innerHTML = '';
+			for (let i = 0; i < n; i++) {
+				let div = document.createElement("div");
+				div.className = "form-group"
+
+
+				let label = document.createElement('label');
+				label.className = 'col-sm-2 control-label';
+				label.for = name + i;
+				label.textContent = `${print} sem ${parseInt(i) + 1} SPI`;
+				div.appendChild(label);
+
+				let innerDiv = document.createElement("div");
+				innerDiv.className = "col-sm-8";
+
+				let input = document.createElement('input');
+				input.type = 'text';
+				input.name = name + i;
+				input.id = name + i;
+				input.className = 'form-control';
+				input.placeholder = `9.00`;
+				innerDiv.appendChild(input);
+				div.appendChild(innerDiv);
+				container.appendChild(div);
+
+			}
+		}
+	</script>
 
 	<?php include 'includes/footer.php'; ?>
