@@ -37,9 +37,6 @@
 									</form>
 								</div>
 							</div>
-							<div class="text-center text-light" style="color:black;">
-								<a href="forgot-password.php" style="color:black;">Forgot password?</a>
-							</div>
 						</div>
 					</div>
 				</div>
