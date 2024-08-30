@@ -23,7 +23,9 @@
 	<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
 
 
-	<?php if ($_SESSION['id']) { ?>
+	<?php 
+	session_start();
+	if ($_SESSION['id']) { ?>
 		<div class="brand clearfix">
 			<a href="#" class="logo" style="font-size:16px;">Shreekar Hostel</a>
 			<span class="menu-btn"><i class="fa fa-bars"></i></span>

@@ -1,4 +1,197 @@
-<?php include 'includes/header.php'; ?>
+<?php
+include 'includes/header.php';
+
+$mysqli = new mysqli('localhost', 'root', '', 'hostel');
+if ($mysqli->connect_error) {
+    die("Connection failed: " . $mysqli->connect_error);
+} else {
+    echo "Connected successfully"; // Check if this message appears
+}
+
+function validatePassword($pass)
+{
+    return strlen($pass) >= 8;
+}
+
+function validateEmail($email)
+{
+    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+function validateMobileNumber($mobile)
+{
+    return preg_match('/^[0-9]{10}$/', $mobile) === 1;
+}
+
+function checkStudentExistence($mysqli, $email, $mobile)
+{
+    $stmt = $mysqli->prepare("SELECT email, contact_no FROM users WHERE email = ? OR contact_no = ?");
+    $stmt->bind_param("ss", $email, $mobile);
+    $stmt->execute();
+    $stmt->store_result();
+    $count = $stmt->num_rows;
+    $stmt->close();
+    return $count === 0;
+}
+
+function checkStudentExistenceName($mysqli, $fullname)
+{
+    $stmt = $mysqli->prepare("SELECT full_name FROM users WHERE full_name = ?");
+    $stmt->bind_param("s", $fullname);
+    $stmt->execute();
+    $stmt->store_result();
+    $count = $stmt->num_rows;
+    $stmt->close();
+    return $count === 0;
+}
+
+function register($mysqli, $fullname, $mobile, $parentmob, $email, $password, $dob, $hobbies, $skills, $english, $blood_group, $mediclaim, $college, $field, $per_10, $per_12, $diploma, $bachelor, $master, $image)
+{
+    $hashpass = password_hash($password, PASSWORD_DEFAULT);
+    $targetDir = "img/user_photo/";
+    $imageName = basename($image['name']);
+    $targetFile = $targetDir . $imageName;
+
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!in_array($image['type'], $allowedTypes) || $image['size'] > 1048576) {
+        echo "<script>alert('Invalid image type or size. Only JPEG/PNG/JPG under 1MB allowed.');</script>";
+        return;
+    }
+
+    if (move_uploaded_file($image['tmp_name'], $targetFile)) {
+        $stmt = $mysqli->prepare("INSERT INTO users (full_name, contact_no, parent_no, email, password, dob, hobbies, skills, English, blood_group, mediclaim, college, field, per_10, per_12, diploma, bachelor, master, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        if (!$stmt) {
+            echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+            exit;
+        }
+
+        if (!$stmt->bind_param("sssssssssssssssssss", $fullname, $mobile, $parentmob, $email, $hashpass, $dob, $hobbies, $skills, $english, $blood_group, $mediclaim, $college, $field, $per_10, $per_12, $diploma, $bachelor, $master, $imageName)) {
+            echo "Binding parameters failed: (" . $stmt->errno . ") " . $stmt->error;
+            exit;
+        }
+
+        if ($stmt->execute()) {
+            echo "<script>
+                swal({
+                    title: 'Registered',
+                    text: 'You have successfully registered!',
+                    icon: 'success'
+                }).then((result) => {
+                    if (result) {
+                        window.location.href = 'index.php';
+                    }
+                });
+            </script>";
+        } else {
+            echo "<script>alert('Registration failed. Please try again.');</script>";
+        }
+
+        $stmt->close();
+    } else {
+        echo "<script>alert('Error uploading image.')</script>";
+    }
+}
+
+if (isset($_POST['verify'])) {
+    $fullname = isset($_POST['full-name']) ? trim($_POST['full-name']) : '';
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $mobile = isset($_POST['contact']) ? trim($_POST['contact']) : '';
+    $parent_mobile = isset($_POST['Parents-contact']) ? trim($_POST['Parents-contact']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $cPassword = isset($_POST['confirm-password']) ? $_POST['confirm-password'] : '';
+    $dob = isset($_POST['bday']) ? $_POST['bday'] : '';
+    $hobbies = isset($_POST['hobbies']) ? $_POST['hobbies'] : '';
+    $skills = isset($_POST['skills']) ? $_POST['skills'] : '';
+    $english = isset($_POST['english']) ? $_POST['english'] : '';
+    $blood_group = isset($_POST['blood-group']) ? $_POST['blood-group'] : '';
+    $mediclaim = isset($_POST['mediclaim']) ? $_POST['mediclaim'] : '';
+    $college_name = isset($_POST['college-name']) ? $_POST['college-name'] : '';
+    $field = isset($_POST['study']) ? $_POST['study'] : '';
+    $per_10 = isset($_POST['10th-percentage']) ? $_POST['10th-percentage'] : '';
+    $per_12 = isset($_POST['12th-percentage']) ? $_POST['12th-percentage'] : '';
+    $diploma = isset($_POST['Dsem']) ? $_POST['Dsem'] : '';
+    $bachelor = isset($_POST['Bsem']) ? $_POST['Bsem'] : '';
+    $master = isset($_POST['Msem']) ? $_POST['Msem'] : '';
+
+	if (empty($email) || empty($mobile) || empty($parent_mobile) || empty($cPassword) || empty($password)) {
+		echo "<script>Swal.fire({
+			title: 'Error',
+			text: 'Please fill out all required fields.',
+			icon: 'error',
+			confirmButtonText: 'OK'
+		});</script>";
+	} elseif (!validateEmail($email)) {
+		echo "<script>Swal.fire({
+			title: 'Error',
+			text: 'Email is invalid.',
+			icon: 'error',
+			confirmButtonText: 'OK'
+		});</script>";
+	} elseif (!validateMobileNumber($mobile)) {
+		echo "<script>Swal.fire({
+			title: 'Error',
+			text: 'Mobile number is not valid.',
+			icon: 'error',
+			confirmButtonText: 'OK'
+		});</script>";
+	} elseif (!validatePassword($password)) {
+		echo "<script>Swal.fire({
+			title: 'Error',
+			text: 'Password criteria does not match. It should contain at least:\n1 Uppercase letter\n1 Special Character\nMinimum 8 characters.',
+			icon: 'error',
+			confirmButtonText: 'OK'
+		});</script>";
+	} elseif (strcasecmp($password, $cPassword) !== 0) {
+		echo "<script>Swal.fire({
+			title: 'Error',
+			text: 'Password and confirm password do not match.',
+			icon: 'error',
+			confirmButtonText: 'OK'
+		});</script>";
+	} elseif (!checkStudentExistence($mysqli, $email, $mobile)) {
+		echo "<script>Swal.fire({
+			title: 'Warning',
+			text: 'Email or Mobile number is already registered.',
+			icon: 'warning',
+			confirmButtonText: 'OK'
+		});</script>";
+	} elseif (!checkStudentExistenceName($mysqli, $fullname)) {
+		echo "<script>Swal.fire({
+			title: 'Warning',
+			text: 'Name is already registered.',
+			icon: 'warning',
+			confirmButtonText: 'OK'
+		});</script>";
+	} else {
+		if ($_FILES['photo']['error'] == UPLOAD_ERR_OK) {
+			register($mysqli, $fullname, $mobile, $parent_mobile, $email, $password, $dob, $hobbies, $skills, $english, $blood_group, $mediclaim, $college_name, $field, $per_10, $per_12, $diploma, $bachelor, $master, $_FILES['photo']);
+			echo "<script>Swal.fire({
+				title: 'Success!',
+				text: 'You have successfully registered!',
+				icon: 'success',
+				confirmButtonText: 'OK'
+			}).then((result) => {
+				if (result.isConfirmed) {
+					window.location.href = 'index.php';
+				}
+			});</script>";
+		} else {
+			echo "<script>Swal.fire({
+				title: 'Error',
+				text: 'Image upload failed.',
+				icon: 'error',
+				confirmButtonText: 'OK'
+			});</script>";
+		}
+	}
+	
+	
+}
+
+$mysqli->close();
+?>
+
 
 <script type="text/javascript">
 	function valid() {
@@ -10,6 +203,19 @@
 		return true;
 	}
 </script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign UP</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
 </head>
 
 <body>
@@ -29,7 +235,7 @@
 								<div class="panel panel-primary">
 									<div class="panel-heading">Fill all Info</div>
 									<div class="panel-body">
-										<form method="post" action="" name="registration" class="form-horizontal" onSubmit="return valid();">
+										<form method="post" enctype="multipart/form-data" action="" name="registration" class="form-horizontal">
 
 
 
@@ -255,7 +461,7 @@ sem 3 : 9.99" rows="7"></textarea>
 
 
 											<div class="col-sm-6 col-sm-offset-4">
-												<input type="submit" name="submit" Value="Register" class="btn btn-primary">
+												<input type="submit" name="verify" Value="Register" class="btn btn-primary">
 											</div>
 										</form>
 
@@ -271,6 +477,7 @@ sem 3 : 9.99" rows="7"></textarea>
 	</div>
 	</div>
 	</div>
+	</html>
 
 	<script>
 		//Diploma
